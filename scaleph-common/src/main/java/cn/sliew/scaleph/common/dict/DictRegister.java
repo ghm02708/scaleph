@@ -16,23 +16,24 @@
  * limitations under the License.
  */
 
-package cn.sliew.scaleph.api.config;
+package cn.sliew.scaleph.common.dict;
 
-import cn.sliew.scaleph.common.util.NetUtils;
-import org.redisson.config.Config;
-import org.redisson.config.SingleServerConfig;
-import org.redisson.spring.starter.RedissonAutoConfiguration;
-import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.context.annotation.Configuration;
+import cn.sliew.carp.framework.common.dict.EnumDictRegistry;
+import org.apache.commons.lang3.EnumUtils;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 
-//@Configuration
-//@AutoConfigureBefore(RedissonAutoConfiguration.class)
-public class RedissionConfig implements RedissonAutoConfigurationCustomizer {
+import java.util.List;
+
+@Component
+public class DictRegister implements InitializingBean {
 
     @Override
-    public void customize(Config config) {
-        SingleServerConfig singleServerConfig = config.useSingleServer();
-        singleServerConfig.setAddress(NetUtils.replaceLocalhost(singleServerConfig.getAddress()));
+    public void afterPropertiesSet() throws Exception {
+        List<DictType> enumList = EnumUtils.getEnumList(DictType.class);
+        for (DictType dictType : enumList) {
+            List values = EnumUtils.getEnumList(dictType.getInstanceClass());
+            EnumDictRegistry.register(dictType, values);
+        }
     }
 }
