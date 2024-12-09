@@ -15,18 +15,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package cn.sliew.scaleph.ds.modal;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
-@Data
-public class PropValuePair {
-
-    @Schema(description = "property")
-    private String property;
-
-    @Schema(description = "value")
-    private String value;
-}
