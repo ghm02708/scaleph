@@ -1,26 +1,28 @@
 import React, {useEffect, useRef, useState} from "react";
 import {Button, message, Modal, Space, Tooltip} from "antd";
-import {DeleteOutlined, EditOutlined} from "@ant-design/icons";
+import {DeleteOutlined, EditOutlined, FileSearchOutlined} from "@ant-design/icons";
 import {ActionType, PageContainer, ProColumns, ProFormInstance, ProTable} from "@ant-design/pro-components";
-import {useAccess, useIntl} from "@umijs/max";
+import {useAccess, useIntl, history} from "@umijs/max";
 import {WORKSPACE_CONF} from "@/constants/constant";
 import {PRIVILEGE_CODE} from "@/constants/privilegeCode";
-import {ScheduleGroup, ScheduleJob} from "@/services/project/typings";
-import {WsScheduleJobService} from "@/services/project/WsScheduleJobService";
-import {WsScheduleGroupService} from "@/services/project/WsScheduleGroupService";
+import {WsScheduleJobService} from "@/services/workspace/schedule/WsScheduleJobService";
+import {WsScheduleGroupService} from "@/services/workspace/schedule/WsScheduleGroupService";
 import ScheduleJobForm from "@/pages/Project/Workspace/Schedule/Job/ScheduleJobForm";
+import {DICT_TYPE} from "@/constants/dictType";
+import {SysDictService} from "@/services/admin/system/sysDict.service";
+import {WorkspaceScheduleAPI} from "@/services/workspace/schedule/typings";
 
 const ScheduleJobWeb: React.FC = () => {
     const intl = useIntl();
     const access = useAccess();
     const actionRef = useRef<ActionType>();
     const formRef = useRef<ProFormInstance>();
-    const [selectedRows, setSelectedRows] = useState<ScheduleJob[]>([]);
-    const [scheduleGroups, setScheduleGroups] = useState<Array<ScheduleGroup>>();
+    const [selectedRows, setSelectedRows] = useState<WorkspaceScheduleAPI.ScheduleJob[]>([]);
+    const [scheduleGroups, setScheduleGroups] = useState<Array<WorkspaceScheduleAPI.ScheduleGroup>>();
     const [jobGroupId, setJobGroupId] = useState<number>();
     const [scheduleJobFormData, setScheduleJobFormData] = useState<{
         visiable: boolean;
-        data: ScheduleJob;
+        data: WorkspaceScheduleAPI.ScheduleJob;
     }>({visiable: false, data: {}});
     const projectId = localStorage.getItem(WORKSPACE_CONF.projectId);
 
@@ -32,7 +34,7 @@ const ScheduleJobWeb: React.FC = () => {
         }
     }, [scheduleGroups]);
 
-    const tableColumns: ProColumns<ScheduleJob>[] = [
+    const tableColumns: ProColumns<WorkspaceScheduleAPI.ScheduleJob>[] = [
         {
             title: intl.formatMessage({id: 'pages.project.schedule.job.jobGroupId'}),
             dataIndex: 'jobGroupId',
@@ -58,8 +60,43 @@ const ScheduleJobWeb: React.FC = () => {
             }
         },
         {
+            title: intl.formatMessage({id: 'pages.project.schedule.job.type'}),
+            dataIndex: 'type',
+            render: (dom, record) => {
+                return record.type?.label;
+            },
+            request: (params, props) => {
+                return SysDictService.listDictByDefinition(DICT_TYPE.scheduleType)
+            }
+        },
+        {
             title: intl.formatMessage({id: 'pages.project.schedule.job.name'}),
             dataIndex: 'name'
+        },
+        {
+            title: intl.formatMessage({id: 'pages.project.schedule.job.engineType'}),
+            dataIndex: 'engineType',
+            render: (dom, record) => {
+                return record.engineType?.label;
+            },
+            request: (params, props) => {
+                return SysDictService.listDictByDefinition(DICT_TYPE.scheduleEngineType)
+            }
+        },
+        {
+            title: intl.formatMessage({id: 'pages.project.schedule.job.jobType'}),
+            dataIndex: 'jobType',
+            render: (dom, record) => {
+                return record.jobType?.label;
+            },
+            request: (params, props) => {
+                return SysDictService.listDictByDefinition(DICT_TYPE.scheduleJobType)
+            }
+        },
+        {
+            title: intl.formatMessage({id: 'pages.project.schedule.job.handler'}),
+            dataIndex: 'handler',
+            hideInSearch: true,
         },
         {
             title: intl.formatMessage({id: 'app.common.data.remark'}),
@@ -87,52 +124,56 @@ const ScheduleJobWeb: React.FC = () => {
             valueType: 'option',
             render: (_, record) => (
                 <Space>
-                    {access.canAccess(PRIVILEGE_CODE.datadevProjectEdit) && (
-                        <Tooltip title={intl.formatMessage({id: 'app.common.operate.edit.label'})}>
-                            <Button
-                                shape="default"
-                                type="link"
-                                icon={<EditOutlined/>}
-                                onClick={() => {
-                                    setScheduleJobFormData({visiable: true, data: record});
-                                }}
-                            />
-                        </Tooltip>
-                    )}
-                    {access.canAccess(PRIVILEGE_CODE.datadevDatasourceDelete) && (
-                        <Tooltip title={intl.formatMessage({id: 'app.common.operate.delete.label'})}>
-                            <Button
-                                shape="default"
-                                type="link"
-                                danger
-                                icon={<DeleteOutlined/>}
-                                onClick={() => {
-                                    Modal.confirm({
-                                        title: intl.formatMessage({id: 'app.common.operate.delete.confirm.title'}),
-                                        content: intl.formatMessage({id: 'app.common.operate.delete.confirm.content'}),
-                                        okText: intl.formatMessage({id: 'app.common.operate.confirm.label'}),
-                                        okButtonProps: {danger: true},
-                                        cancelText: intl.formatMessage({id: 'app.common.operate.cancel.label'}),
-                                        onOk() {
-                                            WsScheduleJobService.deleteOne(record).then((d) => {
-                                                if (d.success) {
-                                                    message.success(intl.formatMessage({id: 'app.common.operate.delete.success'}));
-                                                    actionRef.current?.reload();
-                                                }
-                                            });
-                                        },
-                                    });
-                                }}
-                            />
-                        </Tooltip>
-                    )}
+                    <Tooltip title={intl.formatMessage({id: 'app.common.operate.edit.label'})}>
+                        <Button
+                            shape="default"
+                            type="link"
+                            icon={<EditOutlined/>}
+                            onClick={() => {
+                                setScheduleJobFormData({visiable: true, data: record});
+                            }}
+                        />
+                    </Tooltip>
+                    <Tooltip title={intl.formatMessage({ id: 'app.common.operate.more.label' })}>
+                        <Button
+                            shape="default"
+                            type="link"
+                            icon={<FileSearchOutlined />}
+                            onClick={() => history.push('/workspace/schedule/instance', record)}
+                        />
+                    </Tooltip>
+                    <Tooltip title={intl.formatMessage({id: 'app.common.operate.delete.label'})}>
+                        <Button
+                            shape="default"
+                            type="link"
+                            danger
+                            icon={<DeleteOutlined/>}
+                            onClick={() => {
+                                Modal.confirm({
+                                    title: intl.formatMessage({id: 'app.common.operate.delete.confirm.title'}),
+                                    content: intl.formatMessage({id: 'app.common.operate.delete.confirm.content'}),
+                                    okText: intl.formatMessage({id: 'app.common.operate.confirm.label'}),
+                                    okButtonProps: {danger: true},
+                                    cancelText: intl.formatMessage({id: 'app.common.operate.cancel.label'}),
+                                    onOk() {
+                                        WsScheduleJobService.deleteOne(record).then((d) => {
+                                            if (d.success) {
+                                                message.success(intl.formatMessage({id: 'app.common.operate.delete.success'}));
+                                                actionRef.current?.reload();
+                                            }
+                                        });
+                                    },
+                                });
+                            }}
+                        />
+                    </Tooltip>
                 </Space>
             ),
         },
     ];
 
     return (<PageContainer title={false}>
-        <ProTable<ScheduleJob>
+        <ProTable<WorkspaceScheduleAPI.ScheduleJob>
             search={{
                 labelWidth: 'auto',
                 span: {xs: 24, sm: 12, md: 8, lg: 6, xl: 6, xxl: 4},
