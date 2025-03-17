@@ -23,32 +23,45 @@
     <parent>
         <groupId>cn.sliew</groupId>
         <artifactId>scaleph-plugins</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>2.0.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>scaleph-plugin-datasource</artifactId>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>scaleph-plugin-framework</artifactId>
-        </dependency>
+    <modules>
+        <module>scaleph-plugin-datasource-api</module>
+        <module>scaleph-plugin-datasource-jdbc</module>
+        <module>scaleph-plugin-datasource-mysql</module>
+        <module>scaleph-plugin-datasource-clickhouse</module>
+        <module>scaleph-plugin-datasource-doris</module>
+        <module>scaleph-plugin-datasource-postgre</module>
+        <module>scaleph-plugin-datasource-oracle</module>
+        <module>scaleph-plugin-datasource-greenplum</module>
+        <module>scaleph-plugin-datasource-druid</module>
+        <module>scaleph-plugin-datasource-kafka</module>
+    </modules>
 
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <excludeScope>provided</excludeScope>
+                            <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

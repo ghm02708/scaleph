@@ -22,7 +22,7 @@
     <parent>
         <groupId>cn.sliew</groupId>
         <artifactId>scaleph</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>2.0.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>scaleph-dao</artifactId>
@@ -34,13 +34,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>cn.sliew</groupId>
+            <artifactId>carp-framework-mybatis</artifactId>
         </dependency>
 
         <dependency>
@@ -51,6 +46,11 @@
         <dependency>
             <groupId>com.oracle.database.jdbc</groupId>
             <artifactId>ojdbc8</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ru.yandex.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
         </dependency>
 
         <dependency>

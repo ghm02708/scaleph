@@ -18,20 +18,21 @@
 
 package cn.sliew.scaleph.system.service.param;
 
-import cn.sliew.scaleph.common.param.PaginationParam;
-import io.swagger.annotations.ApiModelProperty;
+import cn.sliew.scaleph.system.model.PaginationParam;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * @author gleiyu
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class SysDictTypeParam extends PaginationParam {
-    @ApiModelProperty(value = "字典类型编码")
-    private String dictTypeCode;
 
-    @ApiModelProperty(value = "字典类型名称")
-    private String dictTypeName;
+    @Schema(description = "字典类型编码")
+    private String code;
+
+    @Schema(description = "字典类型名称")
+    private String name;
 }

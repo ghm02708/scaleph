@@ -23,7 +23,7 @@
     <parent>
         <groupId>cn.sliew</groupId>
         <artifactId>scaleph-plugins</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>2.0.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>scaleph-plugin-seatunnel-native-flink</artifactId>
@@ -35,29 +35,18 @@
         </dependency>
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
-            <artifactId>scaleph-plugin-datasource</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.sliew</groupId>
-            <artifactId>flinkful-cli-descriptor</artifactId>
+            <artifactId>scaleph-plugin-datasource-jdbc</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>cn.sliew</groupId>
-            <artifactId>flinkful-rest-client</artifactId>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>scaleph-plugin-datasource-kafka</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
-
-        <!-- seatunnel additional dependency -->
         <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>scaleph-meta</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

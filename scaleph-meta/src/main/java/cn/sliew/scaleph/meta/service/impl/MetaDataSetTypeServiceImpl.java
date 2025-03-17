@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import cn.hutool.core.util.StrUtil;
+import cn.sliew.scaleph.dao.DataSourceConstants;
 import cn.sliew.scaleph.dao.entity.master.meta.MetaDataSet;
 import cn.sliew.scaleph.dao.entity.master.meta.MetaDataSetType;
 import cn.sliew.scaleph.dao.mapper.master.meta.MetaDataSetMapper;
@@ -58,7 +59,7 @@ public class MetaDataSetTypeServiceImpl implements MetaDataSetTypeService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, transactionManager = DataSourceConstants.MASTER_TRANSACTION_MANAGER_FACTORY)
     public int deleteById(Long id) {
         this.metaDataSetMapper.delete(
             new LambdaQueryWrapper<MetaDataSet>()
@@ -68,13 +69,12 @@ public class MetaDataSetTypeServiceImpl implements MetaDataSetTypeService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int deleteBatch(Map<Integer, ? extends Serializable> map) {
+    @Transactional(rollbackFor = Exception.class, transactionManager = DataSourceConstants.MASTER_TRANSACTION_MANAGER_FACTORY)
+    public int deleteBatch(List<Long> ids) {
         this.metaDataSetMapper.delete(
-            new LambdaQueryWrapper<MetaDataSet>()
-                .in(MetaDataSet::getDataSetTypeId, map.values())
+            new LambdaQueryWrapper<MetaDataSet>().in(MetaDataSet::getDataSetTypeId, ids)
         );
-        return this.metaDataSetTypeMapper.deleteBatchIds(map.values());
+        return this.metaDataSetTypeMapper.deleteBatchIds(ids);
     }
 
     @Override

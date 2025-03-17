@@ -18,29 +18,31 @@
 
 package cn.sliew.scaleph.meta.service.dto;
 
+import cn.sliew.scaleph.system.model.BaseDTO;
+import cn.sliew.scaleph.system.service.vo.DictVO;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import cn.sliew.scaleph.common.dto.BaseDTO;
-import cn.sliew.scaleph.system.service.vo.DictVO;
-import io.swagger.annotations.ApiModel;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 /**
  * @author gleiyu
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel(value = "元数据-表信息", description = "元数据-表信息")
+@EqualsAndHashCode(callSuper = true)
+@Schema(name = "元数据-表信息", description = "元数据-表信息")
 public class TableMetaDTO extends BaseDTO {
+
     private static final long serialVersionUID = -5777242055646416476L;
+
     /**
      * 字段
      */
-    List<TableColumnMetaDTO> columns;
-    private Long id;
+    private List<TableColumnMetaDTO> columns;
+
     private Long dataSourceId;
     /**
      * 表所属的catalog 可能为null

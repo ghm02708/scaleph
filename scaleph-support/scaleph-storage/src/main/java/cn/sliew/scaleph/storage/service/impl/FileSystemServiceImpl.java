@@ -18,13 +18,15 @@
 
 package cn.sliew.scaleph.storage.service.impl;
 
+import cn.sliew.scaleph.config.storage.FileSystemType;
 import cn.sliew.scaleph.storage.service.FileSystemService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.flink.core.fs.*;
-import org.apache.flink.util.IOUtils;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -32,12 +34,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 public class FileSystemServiceImpl implements FileSystemService {
 
-    @Resource
     private FileSystem fs;
+
+    public FileSystemServiceImpl(FileSystem fs) {
+        this.fs = fs;
+    }
 
     @Override
     public FileSystem getFileSystem() {
@@ -45,126 +49,59 @@ public class FileSystemServiceImpl implements FileSystemService {
     }
 
     @Override
-    public boolean exists(String fileName) throws IOException {
-        if (localExists(fileName)) {
-            return true;
-        }
-        Path path = new Path(fs.getWorkingDirectory(), fileName);
-        return fs.exists(path);
-    }
-
-    private boolean localExists(String fileName) throws IOException {
-        if (fs.isDistributedFS()) {
-            final FileSystem localFileSystem = FileSystem.getLocalFileSystem();
-            Path path = new Path(localFileSystem.getWorkingDirectory(), fileName);
-            return localFileSystem.exists(path);
-        }
-        return false;
+    public boolean isDistributedFS() {
+        return fs.getScheme().equals(FileSystemType.LOCAL.getSchema()) == false;
     }
 
     @Override
-    public List<String> list(String directory) throws IOException {
-        Path path = new Path(fs.getWorkingDirectory(), directory);
-        if (fs.exists(path) == false) {
+    public boolean exists(String path) throws IOException {
+        return fs.exists(new Path(path));
+    }
+
+    @Override
+    public List<String> list(String path) throws IOException {
+        if (exists(path) == false) {
             return Collections.emptyList();
         }
-        final FileStatus[] fileStatuses = fs.listStatus(path);
+        FileStatus[] fileStatuses = fs.listStatus(new Path(path));
         return Arrays.stream(fileStatuses)
                 .map(fileStatus -> fileStatus.getPath().getName())
                 .collect(Collectors.toList());
     }
 
     @Override
-    public InputStream get(String fileName) throws IOException {
-        final InputStream localInputStream = localGet(fileName);
-        if (localInputStream != null) {
-            return localInputStream;
-        }
-        Path path = new Path(fs.getWorkingDirectory(), fileName);
-        final FSDataInputStream inputStream = fs.open(path);
-        if (fs.isDistributedFS()) {
-            localUpload(inputStream, fileName);
-            return localGet(fileName);
-        }
-        return inputStream;
-    }
-
-    public InputStream localGet(String fileName) throws IOException {
-        if (fs.isDistributedFS() && localExists(fileName)) {
-            final FileSystem localFileSystem = FileSystem.getLocalFileSystem();
-            Path path = new Path(localFileSystem.getWorkingDirectory(), fileName);
-            return localFileSystem.open(path);
-        }
-        return null;
+    public InputStream get(String path) throws IOException {
+        return fs.open(new Path(path));
     }
 
     @Override
-    public void upload(InputStream inputStream, String fileName) throws IOException {
-        Path path = new Path(fs.getWorkingDirectory(), fileName);
-        if (fs.exists(path.getParent()) == false) {
-            fs.mkdirs(path.getParent());
+    public Path upload(InputStream inputStream, String path) throws IOException {
+        Path filePath = new Path(fs.getWorkingDirectory(), path);
+        if (fs.exists(filePath.getParent()) == false) {
+            fs.mkdirs(filePath.getParent());
         }
-        try (final FSDataOutputStream outputStream = fs.create(path, FileSystem.WriteMode.NO_OVERWRITE)) {
-            IOUtils.copyBytes(inputStream, outputStream);
+        try (FSDataOutputStream outputStream = fs.create(filePath, false)) {
+            IOUtils.copyBytes(inputStream, outputStream, 1024);
         }
-    }
-
-    private void localUpload(InputStream inputStream, String fileName) throws IOException{
-        if (fs.isDistributedFS()) {
-            final FileSystem localFileSystem = FileSystem.getLocalFileSystem();
-            Path localPath = new Path(localFileSystem.getWorkingDirectory(), fileName);
-            if (localFileSystem.exists(localPath.getParent()) == false) {
-                localFileSystem.mkdirs(localPath.getParent());
-            }
-            try (final FSDataOutputStream outputStream = localFileSystem.create(localPath, FileSystem.WriteMode.OVERWRITE)) {
-                IOUtils.copyBytes(inputStream, outputStream);
-            }
-        }
+        return filePath;
     }
 
     @Override
-    public boolean delete(String fileName) throws IOException {
-        localDelete(fileName);
-        Path path = new Path(fs.getWorkingDirectory(), fileName);
-        return fs.delete(path, true);
-    }
-
-    private boolean localDelete(String fileName) throws IOException {
-        if (localExists(fileName)) {
-            final FileSystem localFileSystem = FileSystem.getLocalFileSystem();
-            Path path = new Path(localFileSystem.getWorkingDirectory(), fileName);
-            return localFileSystem.delete(path, true);
-        }
-        return false;
+    public boolean delete(String path) throws IOException {
+        return fs.delete(new Path(path), true);
     }
 
     @Override
-    public Long getFileSize(String fileName) throws IOException {
-        final Long localFileSize = localGetFileSize(fileName);
-        if (localFileSize != null) {
-            return localFileSize;
-        }
-        Path path = new Path(fs.getWorkingDirectory(), fileName);
-        final FileStatus fileStatus = fs.getFileStatus(path);
-        return fileStatus.getBlockSize();
-    }
-
-    private Long localGetFileSize(String fileName) throws IOException {
-        if (localExists(fileName)) {
-            final FileSystem localFileSystem = FileSystem.getLocalFileSystem();
-            Path path = new Path(localFileSystem.getWorkingDirectory(), fileName);
-            final FileStatus fileStatus = localFileSystem.getFileStatus(path);
-            return fileStatus.getBlockSize();
-        }
-        return null;
+    public Long getFileSize(String path) throws IOException {
+        return fs.getFileStatus(new Path(path)).getLen();
     }
 
     @Override
-    public List<FileStatus> listStatus(String directory) throws IOException {
-        Path path = new Path(fs.getWorkingDirectory(), directory);
-        if (fs.exists(path)) {
-            return Arrays.asList(fs.listStatus(path));
+    public List<FileStatus> listStatus(String path) throws IOException {
+        if (exists(path) == false) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        Path filePath = new Path(fs.getWorkingDirectory(), path);
+        return Arrays.asList(fs.listStatus(filePath));
     }
 }

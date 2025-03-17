@@ -23,15 +23,16 @@
     <parent>
         <groupId>cn.sliew</groupId>
         <artifactId>scaleph</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>2.0.6-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <artifactId>scaleph-engine</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>scaleph-engine-seatunnel</module>
-        <module>scaleph-engine-flink</module>
+        <module>scaleph-engine-flink-client</module>
+        <module>scaleph-engine-sql-gateway</module>
+        <module>scaleph-sql-template</module>
     </modules>
 
 </project>

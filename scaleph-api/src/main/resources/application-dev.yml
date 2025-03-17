@@ -17,46 +17,66 @@
 
 spring:
   datasource:
+    carp:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/carp?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:123456}
     master:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://127.0.0.1:3306/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
-      username: root
-      password: 123456
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:123456}
     log:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://127.0.0.1:3306/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
-      username: root
-      password: 123456
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:123456}
+    sakura:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      jdbc-url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/sakura?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
+      username: ${MYSQL_USERNAME:root}
+      password: ${MYSQL_PASSWORD:123456}
   quartz:
     properties:
       org.quartz:
         dataSource:
           quartzDS:
             driver: com.mysql.cj.jdbc.Driver
-            URL: jdbc:mysql://127.0.0.1:3306/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
-            user: root
-            password: 123456
-  redis:
+            URL: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/scaleph?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useAffectedRows=true
+            user: ${MYSQL_USERNAME:root}
+            password: ${MYSQL_PASSWORD:123456}
+  data.redis:
     database: 0
-    host: 127.0.0.1
-    port: 6379
-    password: 123456
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:123456}
 
 app:
   host: localhost:4200
-  resource:
-    minio:
-      endPoint: http://127.0.0.1:9000
-      accessKey: admin
-      secretKey: password
+
+gravitino:
+  #  type: local
+  url: ${GRAVITINO_URL:http://127.0.0.1:8090}
+  metalake: ${spring.application.name}
+  user: ${spring.application.name}
 
 file-system:
 #  type: local
   type: s3
+  proxy: false
   bucket: ${spring.application.name}
-  endPoint: http://127.0.0.1:9000
-  accessKey: admin
-  secretKey: password
+  endPoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+  accessKey: ${MINIO_ACCESS_KEY:admin}
+  secretKey: ${MINIO_SECRET_KEY:password}
+#  type: oss
+#  bucket: ${spring.application.name}
+#  endPoint: Aliyun OSS endpoint to connect to
+#  accessKey: Aliyun access key ID
+#  secretKey: Aliyun access key secret
+#  type: hdfs
+#  hadoopConfPath: Hadoop conf path
+#  defaultFS: hdfs://localhost:9000
 
 
 # log
@@ -67,4 +87,6 @@ logging:
     org.springframework.boot.autoconfigure: warn
     org.springframework.beans.factory: warn
     org.springframework.context: warn
-    cn.sliew.scaleph.api.schedule: info
+    cn.sliew.scaleph:
+      api.schedule: info
+      dao.mapper: info

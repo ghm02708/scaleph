@@ -34,8 +34,11 @@ target/
 
 ### logs ###
 /logs/
+/release
 *.log
 
 **/dependency-reduced-pom.xml
 .gitee
 /lib/
+**/pom.xml.versionsBackup
+/tools/docker/mysql/data/

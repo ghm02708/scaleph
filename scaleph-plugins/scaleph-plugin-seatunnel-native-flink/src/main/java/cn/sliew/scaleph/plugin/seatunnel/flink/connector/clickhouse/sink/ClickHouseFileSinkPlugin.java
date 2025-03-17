@@ -21,8 +21,9 @@ package cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink;
 import cn.sliew.scaleph.common.enums.JobStepTypeEnum;
 import cn.sliew.scaleph.plugin.framework.core.PluginInfo;
 import cn.sliew.scaleph.plugin.framework.property.PropertyDescriptor;
-import cn.sliew.scaleph.plugin.seatunnel.flink.SeatunnelNativeFlinkPlugin;
+import cn.sliew.scaleph.plugin.seatunnel.flink.SeaTunnelNativeFlinkPlugin;
 import cn.sliew.scaleph.plugin.seatunnel.flink.common.CommonProperties;
+import com.google.auto.service.AutoService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,10 +33,11 @@ import static cn.sliew.scaleph.common.enums.SeatunnelNativeFlinkPluginEnum.CLICK
 import static cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink.ClickHouseFileSinkProperties.*;
 import static cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink.ClickHouseProperties.*;
 
-public class ClickHouseFileSinkPlugin extends SeatunnelNativeFlinkPlugin {
+@AutoService(SeaTunnelNativeFlinkPlugin.class)
+public class ClickHouseFileSinkPlugin extends SeaTunnelNativeFlinkPlugin {
 
     public ClickHouseFileSinkPlugin() {
-        this.pluginInfo = new PluginInfo(CLICKHOUSE_FILE_SINK.getValue(), "clickhouse file sink connector", "2.1.1", ClickHouseFileSinkPlugin.class.getName());
+        this.pluginInfo = new PluginInfo(CLICKHOUSE_FILE_SINK.getValue(), "clickhouse file sink connector",  ClickHouseFileSinkPlugin.class.getName());
 
         final List<PropertyDescriptor> props = new ArrayList<>();
         props.add(HOST);

@@ -1,0 +1,90 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: CI-Docker-Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  HUB: ghcr.io/flowerfine/scaleph
+
+jobs:
+#  build:
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#      packages: write
+#    timeout-minutes: 30
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#      - name: Build docker images
+#        run: docker-compose -f tools/docker/build/scaleph/docker-compose.yml up -d
+  buildx:
+    strategy:
+      matrix:
+        image: [ scaleph-api, scaleph-ui-react, scaleph-file-fetcher, mysql ]
+        jdk: [ 17 ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Java JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: temurin
+          cache: maven
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: amd64,arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Fetch Project Version
+        run: |
+          echo "PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >>$GITHUB_ENV
+      - name: Build scaleph-dist
+        run: mvn -B -U -T 4C clean package -Pdist -DskipTests -Dfast
+      - name: Build scaleph-ui-react-dist
+        run: mvn -B -U package -pl scaleph-ui-react -am -DskipTests
+      - name: Build scaleph-ui-react
+        run: cd scaleph-ui-react && npm install && npm run build --prod
+      - name: Build scaleph-file-fetcher
+        run: mvn -B -U -T 4C clean package -Pdist -DskipTests -Dfast -am --projects scaleph-file-fetcher
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          no-cache: false
+          cache-from: type=gha
+          cache-to: type=gha
+          push: false
+          context: .
+          platforms: linux/amd64,linux/arm64
+          file: tools/docker/build/${{ matrix.image }}/Dockerfile
+          tags: |
+            ${{ env.HUB }}/${{ matrix.image }}:${{ env.PROJECT_VERSION }},
+            ${{ env.HUB }}/${{ matrix.image }}:latest

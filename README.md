@@ -1,6 +1,6 @@
 # scaleph
 
-[![Gihub Actions](https://github.com/flowerfine/scaleph/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/flowerfine/scaleph/actions) [![Total Lines](https://tokei.rs/b1/github/flowerfine/scaleph?category=lines)](https://github.com/flowerfine/scaleph) [![Last commit](https://img.shields.io/github/last-commit/flowerfine/scaleph.svg)](https://github.com/flowerfine/scaleph) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=flowerfine_scaleph&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=flowerfine_scaleph) [![codecov](https://codecov.io/gh/flowerfine/scaleph/branch/master/graph/badge.svg)](https://codecov.io/gh/flowerfine/scaleph/branch/master)
+[![Gihub Actions](https://github.com/flowerfine/scaleph/actions/workflows/ci-maven.yml/badge.svg?branch=master)](https://github.com/flowerfine/scaleph/actions) [![Total Lines](https://tokei.rs/b1/github/flowerfine/scaleph?category=lines)](https://github.com/flowerfine/scaleph) [![Last commit](https://img.shields.io/github/last-commit/flowerfine/scaleph.svg)](https://github.com/flowerfine/scaleph) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=flowerfine_scaleph&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=flowerfine_scaleph) [![codecov](https://codecov.io/gh/flowerfine/scaleph/branch/master/graph/badge.svg)](https://codecov.io/gh/flowerfine/scaleph/branch/master) [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=flat&logo=docker&logoColor=white)](https://github.com/orgs/flowerfine/packages?repo_name=scaleph)
 
 The Scaleph project features data integration, develop,  job schedule and orchestration and aims to run on cloud environment. 
 
@@ -10,74 +10,47 @@ Scaleph is driven by personal interest and evolves actively through faithful dev
 
 ## Features
 
-* Web-ui click-and-drag data integration ways backended by out-of-the-box connectors.
-* Multiple versions, different deployment mode and different resource provider flink job execution ways, where we develop [flinkful](https://github.com/flowerfine/flinkful) for solving these troubles.
-* Job version management.
-* Project configuration, dependency and resource.
+* Data Integration
+  * Web-ui click-and-drag data integration ways backended by [Apache SeaTunnel](https://seatunnel.apache.org/) on Flink engine.
+  
+  * Support the latest 2.3.8 V2 out-of-the-box connectors and transforms.
 
-## Quick Start
+  * DataSource management.
+  
+* Data Development
+  * Jar. User develops Flink job using DataStream or Table API and package it as a jar.
+  * SQL. Support online Flink SQL editor backended by [Flink SQL Gateway](https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/table/sql-gateway/overview/).
+* Data Warehouse
+  * Doris. Support Doris Cluster management on Kubernetes backended by [doris-operator](https://github.com/selectdb/doris-operator).
 
-Whenever people want to explore Scaleph system, they want a running Scaleph application, then people can interact with Scaleph through Scaleph Admin.
+* Other
+  * Kubernetes. Manage Flink through [Flink Kubernetes Operator](https://nightlies.apache.org/flink/flink-kubernetes-operator-docs-stable/) and Doris through [doris-operator](https://github.com/selectdb/doris-operator).
 
-Luckily, deploy Scaleph locally just takes three steps.
-
-* Make sure Docker installed on your machine.
-* Clone the repository
-* Use Docker Compose and Scaleph Docker image quickly install and run Scaleph.
-
-```shell
-git clone https://github.com/flowerfine/scaleph.git
-cd scaleph/tools/docker/deploy/scaleph
-docker-compose up
-```
-
-Once all containers have started, the UI is ready to go at [http://localhost](http://localhost/), user can login by `sys_admin/123456`
 
 ## Documentation
 
-please refer [wiki](https://github.com/flowerfine/scaleph/wiki)
+Learn more about Scaleph at https://github.com/flowerfine/scaleph
 
-## Build and Deployment
+## Code of Conduct
 
-* [develop](docs/develop/develop.md). This doc describes how to set up local development environment of Scaleph project.
-* checkstyle. Scaleph project requires clean and robust code, which can help Scaleph go further and develop better.
-* [build](docs/build/build.md). This doc describes how to build the Scaleph project from source. Scaleph adopts `maven` as its build system, for more information about build from source and deployment.
-* [docker](docs/docker/docker-build.md). As more application runs in container on cloud then bare metal machine, Scaleph provides own image.
-* deploy. For different deployment purpose such as develop, test or production, Scaleph make the best effort for people deploy project on local, docker and kubernetes.
-  * [local](docs/deploy/local/local.md). require fluent network.
-  * [docker](docs/deploy/docker/docker.md). require fluent network.
-  * [kubernetes](docs/deploy/kubernetes/kubernetes.md). work in process.
-
-
-## RoadMap
-
-### features
-
-1. data ingress and egress.
-   1. Flink way data integration . Scaleph reduces complexity of integration through `seatunnel`, `flink-cdc-connectors` and other flink connectors.
-   2. Friendly web-ui to newbies . 
-2. data develop
-   1. udf + sql.
-   1. support multi-layer data warehouse development.
-3. job schedule and orchestrate
-
-### architectures
-
-1. cloud native
-   1. container and kubernetes development and runtime environment.
-      1. flink operator
-      2. seatunnel operator
-      3. scaleph operator
-   2. java 17, quarkus.
-2. plugins. https://dubbo.apache.org/zh/docsv2.7/dev/principals/
+This project adheres to the Contributor Covenant [code of conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
 
 ## Contributing
 
 For contributions, please refer [CONTRIBUTING](https://github.com/flowerfine/scaleph)
 
+Thanks for all people who already contributed to Scaleph!
+
+<a href="https://github.com/flowerfine/scaleph/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=flowerfine/scaleph" /></a>
+
 ## Contact
 
 * Bugs and Features: [Issues](https://github.com/flowerfine/scaleph/issues)
+
+* Chinese user:
+
+   ![wechat](docs/image/1581680135004_.pic.jpg)
 
 ## Sponsor
 

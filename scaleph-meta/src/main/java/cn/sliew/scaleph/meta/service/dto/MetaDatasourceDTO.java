@@ -18,19 +18,19 @@
 
 package cn.sliew.scaleph.meta.service.dto;
 
-import cn.sliew.scaleph.common.dto.BaseDTO;
+import cn.sliew.scaleph.common.constant.Constants;
+import cn.sliew.scaleph.common.util.I18nUtil;
+import cn.sliew.scaleph.system.model.BaseDTO;
 import cn.sliew.scaleph.system.service.vo.DictVO;
-import cn.sliew.scaleph.system.util.I18nUtil;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.util.CollectionUtils;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 import java.util.Map;
 
 /**
@@ -38,7 +38,7 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "MetaDatasource对象", description = "元数据-数据源信息")
+@Schema(name = "MetaDatasource对象", description = "元数据-数据源信息")
 public class MetaDatasourceDTO extends BaseDTO {
 
     private static final long serialVersionUID = -4194301324161897144L;
@@ -46,30 +46,30 @@ public class MetaDatasourceDTO extends BaseDTO {
     @NotBlank
     @Length(min = 1, max = 64)
     @Pattern(regexp = "\\w+$")
-    @ApiModelProperty(value = "数据源名称")
+    @Schema(description = "数据源名称")
     private String datasourceName;
 
     @NotNull
-    @ApiModelProperty(value = "数据源类型")
+    @Schema(description = "数据源类型")
     private DictVO datasourceType;
 
-    @ApiModelProperty(value = "数据源支持的属性对象")
+    @Schema(description = "数据源支持的属性对象")
     private Map<String, Object> props;
 
-    @ApiModelProperty(value = "数据源支持的属性字符串")
+    @Schema(description = "数据源支持的属性字符串")
     private String propsStr;
 
-    @ApiModelProperty(value = "数据源支持的额外属性对象")
+    @Schema(description = "数据源支持的额外属性对象")
     private Map<String, Object> additionalProps;
 
-    @ApiModelProperty(value = "数据源支持的额外属性符串")
+    @Schema(description = "数据源支持的额外属性符串")
     private String additionalPropsStr;
 
     @Length(max = 250)
-    @ApiModelProperty(value = "备注描述")
+    @Schema(description = "备注描述")
     private String remark;
 
-    @ApiModelProperty("是否改变了密码")
+    @Schema(description = "是否改变了密码")
     private Boolean passwdChanged;
 
     public void setPropsStr(String propsStr) {
@@ -83,11 +83,14 @@ public class MetaDatasourceDTO extends BaseDTO {
     public void setPropsStr(Map<String, Object> props) {
         if (!CollectionUtils.isEmpty(props)) {
             StringBuffer buffer = new StringBuffer();
-            props.forEach((k, v) ->
-                    buffer.append("<b>" + I18nUtil.get("datadev.datasource.props." + k) + "</b>")
-                            .append(":")
-                            .append(v)
-                            .append("<br/>")
+            props.forEach((k, v) -> {
+                        if (!v.toString().startsWith(Constants.CODEC_STR_PREFIX)) {
+                            buffer.append("<b>" + I18nUtil.get("datadev.datasource.props." + k) + "</b>")
+                                    .append(":")
+                                    .append(v)
+                                    .append("<br/>");
+                        }
+                    }
             );
             setPropsStr(buffer.toString());
         }

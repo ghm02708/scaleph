@@ -20,35 +20,45 @@ package cn.sliew.scaleph.plugin.seatunnel.flink.connector.kafka.source;
 
 import cn.sliew.milky.common.util.JacksonUtil;
 import cn.sliew.scaleph.common.enums.JobStepTypeEnum;
+import cn.sliew.scaleph.common.util.PropertyUtil;
+import cn.sliew.scaleph.common.util.SpringApplicationContextUtil;
+import cn.sliew.scaleph.meta.service.MetaDatasourceService;
+import cn.sliew.scaleph.meta.service.dto.MetaDatasourceDTO;
+import cn.sliew.scaleph.plugin.datasource.kafka.KafkaProperties;
 import cn.sliew.scaleph.plugin.framework.core.PluginInfo;
 import cn.sliew.scaleph.plugin.framework.property.PropertyDescriptor;
-import cn.sliew.scaleph.plugin.seatunnel.flink.SeatunnelNativeFlinkPlugin;
+import cn.sliew.scaleph.plugin.seatunnel.flink.SeaTunnelNativeFlinkPlugin;
 import cn.sliew.scaleph.plugin.seatunnel.flink.common.CommonProperties;
+import cn.sliew.scaleph.system.service.vo.DictVO;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.auto.service.AutoService;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static cn.sliew.scaleph.common.enums.SeatunnelNativeFlinkPluginEnum.KAFKA_SOURCE;
 import static cn.sliew.scaleph.plugin.seatunnel.flink.connector.kafka.source.KafkaSourceProperties.*;
 
-public class KafkaSourcePlugin extends SeatunnelNativeFlinkPlugin {
+@AutoService(SeaTunnelNativeFlinkPlugin.class)
+public class KafkaSourcePlugin extends SeaTunnelNativeFlinkPlugin {
 
     public KafkaSourcePlugin() {
-        this.pluginInfo = new PluginInfo(KAFKA_SOURCE.getValue(), "kafka source connector", "2.1.1", KafkaSourcePlugin.class.getName());
+        this.pluginInfo = new PluginInfo(KAFKA_SOURCE.getValue(), "kafka source connector", KafkaSourcePlugin.class.getName());
 
         final List<PropertyDescriptor> props = new ArrayList<>();
         props.add(TOPICS);
         props.add(CONSUMER_GROUP_ID);
         props.add(CONSUMER_BOOTSTRAP_SERVERS);
         props.add(FORMAT_TYPE);
-        props.add(FORMAT_XXX);
+        props.add(FORMAT_CONF);
         props.add(SCHEMA);
         props.add(ROWTIME_FIELD);
         props.add(WATERMARK);
         props.add(OFFSET_RESET);
-        props.add(CONSUMER_XXX);
+        props.add(OFFSET_RESET_SPECIFIC);
+        props.add(CONSUMER_CONF);
 
         props.add(CommonProperties.RESULT_TABLE_NAME);
         props.add(CommonProperties.FIELD_NAME);
@@ -60,4 +70,34 @@ public class KafkaSourcePlugin extends SeatunnelNativeFlinkPlugin {
         return JobStepTypeEnum.SOURCE;
     }
 
+    @Override
+    public ObjectNode createConf() {
+        ObjectNode objectNode = JacksonUtil.createObjectNode();
+        for (PropertyDescriptor descriptor : getSupportedProperties()) {
+            if (properties.contains(descriptor)) {
+                if (CONSUMER_BOOTSTRAP_SERVERS.getName().equals(descriptor.getName())) {
+                    DictVO dictVO = JacksonUtil.parseJsonString(properties.getValue(descriptor), DictVO.class);
+                    MetaDatasourceService metaDatasourceService = SpringApplicationContextUtil.getBean(MetaDatasourceService.class);
+                    MetaDatasourceDTO metaDatasource = metaDatasourceService.selectOne(Long.parseLong(dictVO.getValue()), false);
+                    String bootStrapServers = metaDatasource.getProps().get(KafkaProperties.BOOTSTRAP_SERVERS.getName()).toString();
+                    objectNode.put(CONSUMER_BOOTSTRAP_SERVERS.getName().replace("_", "."), bootStrapServers);
+                } else if (CONSUMER_CONF.getName().equals(descriptor.getName())) {
+                    Map<String, String> map = PropertyUtil.formatPropFromStr(properties.getValue(descriptor));
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        objectNode.put("consumer." + entry.getKey(), entry.getValue());
+                    }
+                } else if (FORMAT_CONF.getName().equals(descriptor.getName())) {
+                    Map<String, String> map = PropertyUtil.formatPropFromStr(properties.getValue(descriptor));
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        objectNode.put(entry.getKey(), entry.getValue());
+                    }
+                } else if (descriptor.getName().contains("_")) {
+                    objectNode.put(descriptor.getName().replace("_", "."), properties.getValue(descriptor));
+                } else {
+                    objectNode.put(descriptor.getName(), properties.getValue(descriptor));
+                }
+            }
+        }
+        return objectNode;
+    }
 }

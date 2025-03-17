@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sliew.scaleph.dao.mapper.master.ws.WsFlinkKubernetesJobMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.sliew.scaleph.dao.entity.master.ws.WsFlinkKubernetesJob">
+        <result column="id" property="id"/>
+        <result column="creator" property="creator"/>
+        <result column="create_time" property="createTime"/>
+        <result column="editor" property="editor"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="project_id" property="projectId"/>
+        <result column="name" property="name"/>
+        <result column="job_id" property="jobId"/>
+        <result column="execution_mode" property="executionMode"/>
+        <result column="deployment_kind" property="deploymentKind"/>
+        <result column="flink_deployment_id" property="flinkDeploymentId"/>
+        <result column="flink_session_cluster_id" property="flinkSessionClusterId"/>
+        <result column="type" property="type"/>
+        <result column="artifact_flink_jar_id" property="artifactFlinkJarId"/>
+        <result column="artifact_flink_sql_id" property="artifactFlinkSqlId"/>
+        <result column="artifact_flink_cdc_id" property="artifactFlinkCDCId"/>
+        <result column="artifact_seatunnel_id" property="artifactSeaTunnelId"/>
+        <result column="remark" property="remark"/>
+        <association column="flink_deployment_id" property="flinkDeployment"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsFlinkKubernetesDeploymentMapper.selectById"/>
+        <association column="flink_session_cluster_id" property="flinkSessionCluster"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsFlinkKubernetesSessionClusterMapper.selectById"/>
+        <association column="artifact_flink_jar_id" property="artifactFlinkJar"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsArtifactFlinkJarMapper.selectOne"/>
+        <association column="artifact_flink_sql_id" property="artifactFlinkSql"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsArtifactFlinkSqlMapper.selectOne"/>
+        <association column="artifact_flink_cdc_id" property="artifactFlinkCDC"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsArtifactFlinkCDCMapper.selectOne"/>
+        <association column="artifact_seatunnel_id" property="artifactSeaTunnel"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsArtifactSeaTunnelMapper.selectOne"/>
+        <association column="id" property="jobInstance" javaType="cn.sliew.scaleph.dao.entity.master.ws.WsFlinkKubernetesJobInstance"
+                     select="cn.sliew.scaleph.dao.mapper.master.ws.WsFlinkKubernetesJobInstanceMapper.selectCurrent"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, creator, create_time, editor, update_time,
+        project_id, `name`, job_id, execution_mode,
+        deployment_kind, flink_deployment_id, flink_session_cluster_id,
+        `type`, artifact_flink_jar_id, artifact_flink_sql_id, artifact_flink_cdc_id,
+        artifact_seatunnel_id, additional_dependencies, remark
+    </sql>
+
+    <select id="list" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ws_flink_kubernetes_job
+        <where>
+            project_id = #{projectId}
+            <if test="executionMode != null">
+                AND execution_mode = #{executionMode}
+            </if>
+            <if test="flinkJobType != null">
+                AND `type` = #{flinkJobType}
+            </if>
+            <if test="deploymentKind != null">
+                AND deployment_kind = #{deploymentKind}
+            </if>
+            <if test="name != null and name != ''">
+                AND `name` like concat('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectOne" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM ws_flink_kubernetes_job
+        WHERE
+        id = #{id}
+    </select>
+</mapper>

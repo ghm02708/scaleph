@@ -1,0 +1,86 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:3.9.2
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+    environment:
+      - TZ=Asia/Shanghai
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    restart: unless-stopped
+    networks:
+      - scaleph
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+    networks:
+      - scaleph
+
+  kakfa-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: kakfa-ui
+    depends_on:
+      - kafka
+    ports:
+      - 7080:8080
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=docker
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    networks:
+      - scaleph
+
+  canal-server:
+    image: canal/canal-server:v1.1.7
+    container_name: canal-server
+    depends_on:
+      - kafka
+    ports:
+      - 11111:11111
+    volumes:
+      - ../../canal/canal.properties:/home/admin/canal-server/conf/canal.properties
+      - ../../canal/instance.properties:/home/admin/canal-server/conf/data_service/instance.properties
+    networks:
+      - scaleph
+
+  canal-admin:
+    image: canal/canal-admin:v1.1.7
+    container_name: canal-admin
+    networks:
+      - scaleph
+
+networks:
+  scaleph:
+    external: true
+    name: local_scaleph

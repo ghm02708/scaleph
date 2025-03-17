@@ -19,40 +19,48 @@
 package cn.sliew.scaleph.meta.service.impl;
 
 import cn.sliew.scaleph.common.codec.CodecUtil;
-import cn.sliew.scaleph.common.constant.Constants;
 import cn.sliew.scaleph.common.exception.Rethrower;
+import cn.sliew.scaleph.common.util.PropertyUtil;
+import cn.sliew.scaleph.common.util.ScalephSystemUtil;
+import cn.sliew.scaleph.common.util.TemporaryClassLoaderContext;
 import cn.sliew.scaleph.dao.entity.master.meta.MetaDatasource;
 import cn.sliew.scaleph.dao.mapper.master.meta.MetaDatasourceMapper;
 import cn.sliew.scaleph.meta.service.MetaDatasourceService;
 import cn.sliew.scaleph.meta.service.convert.MetaDataSourceConvert;
 import cn.sliew.scaleph.meta.service.dto.MetaDatasourceDTO;
 import cn.sliew.scaleph.meta.service.param.MetaDatasourceParam;
-import cn.sliew.scaleph.plugin.datasource.DatasourceManager;
-import cn.sliew.scaleph.plugin.datasource.DatasourcePlugin;
+import cn.sliew.scaleph.plugin.datasource.api.DatasourceManager;
+import cn.sliew.scaleph.plugin.datasource.api.DatasourcePlugin;
 import cn.sliew.scaleph.plugin.framework.core.PluginInfo;
 import cn.sliew.scaleph.plugin.framework.property.Property;
 import cn.sliew.scaleph.plugin.framework.property.PropertyContext;
 import cn.sliew.scaleph.plugin.framework.property.PropertyDescriptor;
-import cn.sliew.scaleph.system.util.PropertyUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Service
-public class MetaDatasourceServiceImpl implements MetaDatasourceService {
+public class MetaDatasourceServiceImpl implements MetaDatasourceService, InitializingBean {
 
-    private DatasourceManager datasourceManager = new DatasourceManager();
+    private DatasourceManager datasourceManager;
 
     @Autowired
     private MetaDatasourceMapper metaDatasourceMapper;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        Path datasourcePluginPath = ScalephSystemUtil.getDatasourcePluginDir();
+        this.datasourceManager = new DatasourceManager(datasourcePluginPath);
+    }
 
     @Override
     public Set<PluginInfo> getAvailableDataSources() {
@@ -62,12 +70,14 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
     @Override
     public List<PropertyDescriptor> getSupportedProperties(String name) {
         Set<PluginInfo> pluginInfoSet = getAvailableDataSources();
+        String className = null;
         for (PluginInfo pluginInfo : pluginInfoSet) {
             if (pluginInfo.getName().equalsIgnoreCase(name)) {
                 name = pluginInfo.getName();
+                className = pluginInfo.getClassname();
             }
         }
-        PluginInfo pluginInfo = new PluginInfo(name, null, null, null);
+        PluginInfo pluginInfo = new PluginInfo(name, null, className);
         return datasourceManager.getSupportedProperties(pluginInfo);
     }
 
@@ -96,7 +106,6 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
     /**
      * todo check is datasource is used
      */
-
     @Override
     public int deleteById(Long id) {
         return metaDatasourceMapper.deleteById(id);
@@ -106,12 +115,12 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
      * todo check is datasource is used
      */
     @Override
-    public int deleteBatch(Map<Integer, ? extends Serializable> map) {
-        return metaDatasourceMapper.deleteBatchIds(map.values());
+    public int deleteBatch(List<Long> ids) {
+        return metaDatasourceMapper.deleteBatchIds(ids);
     }
 
     @Override
-    public MetaDatasourceDTO selectOne(Serializable id, boolean encrypt) {
+    public MetaDatasourceDTO selectOne(Long id, boolean encrypt) {
         final MetaDatasource datasource = metaDatasourceMapper.selectById(id);
         MetaDatasourceDTO datasourceDTO = MetaDataSourceConvert.INSTANCE.toDto(datasource);
         encryptProps(datasourceDTO, encrypt);
@@ -123,15 +132,17 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
         Page<MetaDatasource> list = metaDatasourceMapper.selectPage(
                 new Page<>(param.getCurrent(), param.getPageSize()),
                 Wrappers.lambdaQuery(MetaDatasource.class)
-                        .like(StringUtils.hasText(param.getDatasourceName()), MetaDatasource::getDatasourceName,
+                        .like(StringUtils.hasText(param.getDatasourceName()),
+                                MetaDatasource::getDatasourceName,
                                 param.getDatasourceName())
-                        .eq(StringUtils.hasText(param.getDatasourceType()), MetaDatasource::getDatasourceType,
+                        .eq(StringUtils.hasText(param.getDatasourceType()),
+                                MetaDatasource::getDatasourceType,
                                 param.getDatasourceType())
         );
         Page<MetaDatasourceDTO> result =
                 new Page<>(list.getCurrent(), list.getSize(), list.getTotal());
         List<MetaDatasourceDTO> dtoList = MetaDataSourceConvert.INSTANCE.toDto(list.getRecords());
-        dtoList.forEach(this::cleanSensitiveParam);
+//        dtoList.forEach(this::cleanSensitiveParam);
         result.setRecords(dtoList);
         return result;
     }
@@ -150,15 +161,17 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
         Map<String, Object> propMap = metaDatasourceDTO.getProps();
         List<PropertyDescriptor> propDescList = getSupportedProperties(pluginName);
         for (PropertyDescriptor prop : propDescList) {
+            String value = (String) propMap.get(prop.getName());
+            if (StringUtils.hasText(value) == false) {
+                continue;
+            }
+
             EnumSet<Property> propEnumSet = prop.getProperties();
             if (propEnumSet.contains(Property.Sensitive)) {
-                String value = (String) propMap.get(prop.getName());
-                if (encrypt && !isEncryptedStr(value)) {
-                    String encodeValue = Constants.CODEC_STR_PREFIX + CodecUtil.encodeToBase64(value);
-                    propMap.put(prop.getName(), encodeValue);
-                } else if (!encrypt && isEncryptedStr(value)) {
-                    String decodeValue = CodecUtil.decodeFromBase64(value.substring(Constants.CODEC_STR_PREFIX.length()));
-                    propMap.put(prop.getName(), decodeValue);
+                if (encrypt && !CodecUtil.isEncryptedStr(value)) {
+                    propMap.put(prop.getName(), CodecUtil.encrypt(value));
+                } else if (!encrypt && CodecUtil.isEncryptedStr(value)) {
+                    propMap.put(prop.getName(), CodecUtil.decrypt(value));
                 }
             }
         }
@@ -171,28 +184,25 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
         Set<PluginInfo> pluginInfoSet = getAvailableDataSources();
         try {
             for (PluginInfo pluginInfo : pluginInfoSet) {
-                if (pluginInfo.getName().equalsIgnoreCase(metaDatasourceDTO.getDatasourceType().getValue())) {
-                    Class clazz = Class.forName(pluginInfo.getClassname());
-                    DatasourcePlugin datasource = (DatasourcePlugin) clazz.newInstance();
-                    datasource.setAdditionalProperties(PropertyUtil.mapToProperties(metaDatasourceDTO.getAdditionalProps()));
-                    datasource.configure(PropertyContext.fromMap(metaDatasourceDTO.getProps()));
-                    datasource.start();
-                    result = datasource.testConnection();
-                    datasource.shutdown();
+                if (pluginInfo.getName()
+                        .equalsIgnoreCase(metaDatasourceDTO.getDatasourceType().getValue())) {
+                    ClassLoader classLoader = pluginInfo.getClassLoader();
+                    try (TemporaryClassLoaderContext ignored = TemporaryClassLoaderContext.of(classLoader)) {
+                        Class clazz = Class.forName(pluginInfo.getClassname(), true, classLoader);
+                        DatasourcePlugin datasource = (DatasourcePlugin) clazz.newInstance();
+                        datasource.setAdditionalProperties(
+                                PropertyUtil.mapToProperties(metaDatasourceDTO.getAdditionalProps()));
+                        datasource.configure(PropertyContext.fromMap(metaDatasourceDTO.getProps()));
+                        datasource.start();
+                        result = datasource.testConnection();
+                        datasource.shutdown();
+                    }
                 }
             }
         } catch (Exception e) {
             Rethrower.throwAs(e);
         }
         return result;
-    }
-
-    /**
-     * @param str str
-     * @return true/false
-     */
-    private boolean isEncryptedStr(String str) {
-        return str.startsWith(Constants.CODEC_STR_PREFIX);
     }
 
     private boolean validateProps(MetaDatasourceDTO metaDatasourceDTO) {
@@ -212,18 +222,5 @@ public class MetaDatasourceServiceImpl implements MetaDatasourceService {
             Rethrower.throwAs(e);
         }
         return false;
-    }
-
-    private void cleanSensitiveParam(MetaDatasourceDTO metaDatasourceDTO) {
-        String pluginName = metaDatasourceDTO.getDatasourceType().getValue();
-        Map<String, Object> propMap = metaDatasourceDTO.getProps();
-        List<PropertyDescriptor> propDescList = getSupportedProperties(pluginName);
-        for (PropertyDescriptor prop : propDescList) {
-            EnumSet<Property> propEnumSet = prop.getProperties();
-            if (propEnumSet.contains(Property.Sensitive)) {
-                propMap.remove(prop.getName());
-            }
-        }
-        metaDatasourceDTO.setPropsStr(propMap);
     }
 }

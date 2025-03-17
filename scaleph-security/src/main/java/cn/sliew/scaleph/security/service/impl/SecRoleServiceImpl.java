@@ -18,23 +18,28 @@
 
 package cn.sliew.scaleph.security.service.impl;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
+import cn.sliew.scaleph.dao.DataSourceConstants;
 import cn.sliew.scaleph.dao.entity.master.security.SecRole;
-import cn.sliew.scaleph.dao.mapper.master.security.SecRoleMapper;
 import cn.sliew.scaleph.security.service.SecDeptRoleService;
 import cn.sliew.scaleph.security.service.SecRolePrivilegeService;
 import cn.sliew.scaleph.security.service.SecRoleService;
 import cn.sliew.scaleph.security.service.SecUserRoleService;
 import cn.sliew.scaleph.security.service.convert.SecRoleConvert;
 import cn.sliew.scaleph.security.service.dto.SecRoleDTO;
+import cn.sliew.scaleph.security.service.param.SecRoleAddParam;
+import cn.sliew.scaleph.security.service.param.SecRoleListParam;
+import cn.sliew.scaleph.security.service.param.SecRoleUpdateParam;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * <p>
@@ -44,75 +49,50 @@ import org.springframework.util.CollectionUtils;
  * @author liyu
  * @since 2021-08-01
  */
-@Service
+//@Service
 public class SecRoleServiceImpl implements SecRoleService {
-    @Autowired
-    private SecRoleMapper secRoleMapper;
-    @Autowired
-    private SecUserRoleService secUserRoleService;
-    @Autowired
-    private SecRolePrivilegeService secRolePrivilegeService;
-    @Autowired
-    private SecDeptRoleService secDeptRoleService;
-
     @Override
-    public int insert(SecRoleDTO secRoleDTO) {
-        SecRole secRole = SecRoleConvert.INSTANCE.toDo(secRoleDTO);
-        return this.secRoleMapper.insert(secRole);
+    public int insert(SecRoleAddParam param) {
+        return 0;
     }
 
     @Override
-    public int update(SecRoleDTO secRoleDTO) {
-        SecRole secRole = SecRoleConvert.INSTANCE.toDo(secRoleDTO);
-        return this.secRoleMapper.updateById(secRole);
+    public int update(SecRoleUpdateParam param) {
+        return 0;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public int deleteById(Long id) {
-        this.secUserRoleService.deleteByRoleId(id);
-        this.secRolePrivilegeService.deleteByRoleId(id);
-        this.secDeptRoleService.deleteByRoleId(id);
-        return this.secRoleMapper.deleteById(id);
+        return 0;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int deleteBatch(Map<Integer, ? extends Serializable> map) {
-        if (CollectionUtils.isEmpty(map)) {
-            return 0;
-        }
-        for (Serializable id : map.values()) {
-            this.secUserRoleService.deleteByRoleId(id);
-            this.secRolePrivilegeService.deleteByRoleId(id);
-            this.secDeptRoleService.deleteByRoleId(id);
-        }
-        return this.secRoleMapper.deleteBatchIds(map.values());
+    public int deleteBatch(List<Long> ids) {
+        return 0;
     }
 
     @Override
     public SecRoleDTO selectOne(Long id) {
-        SecRole secRole = this.secRoleMapper.selectById(id);
-        return SecRoleConvert.INSTANCE.toDto(secRole);
+        return null;
     }
 
     @Override
     public SecRoleDTO selectOne(String roleCode) {
-        SecRole secRole = this.secRoleMapper.selectOne(
-            new LambdaQueryWrapper<SecRole>().eq(SecRole::getRoleCode, roleCode));
-        return SecRoleConvert.INSTANCE.toDto(secRole);
+        return null;
     }
 
     @Override
     public List<SecRoleDTO> listAll() {
-        List<SecRole> list = this.secRoleMapper.selectList(
-            new LambdaQueryWrapper<SecRole>().orderByAsc(SecRole::getCreateTime));
-        return SecRoleConvert.INSTANCE.toDto(list);
+        return null;
+    }
+
+    @Override
+    public Page<SecRoleDTO> listByPage(SecRoleListParam param) {
+        return null;
     }
 
     @Override
     public List<SecRoleDTO> selectRoleByDept(String grant, Long deptId) {
-        List<SecRole> list = this.secRoleMapper.selectRoleByDept(grant, deptId);
-        return SecRoleConvert.INSTANCE.toDto(list);
+        return null;
     }
 }

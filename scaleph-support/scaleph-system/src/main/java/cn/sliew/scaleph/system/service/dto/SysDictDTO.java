@@ -18,14 +18,12 @@
 
 package cn.sliew.scaleph.system.service.dto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-
 import cn.sliew.scaleph.common.constant.Constants;
-import cn.sliew.scaleph.common.dto.BaseDTO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import cn.sliew.scaleph.common.dict.DictType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
@@ -39,35 +37,35 @@ import org.hibernate.validator.constraints.Length;
  * @since 2021-07-24
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "数据字典信息", description = "数据字典表")
-public class SysDictDTO extends BaseDTO {
+@EqualsAndHashCode
+@Schema(name = "数据字典信息", description = "数据字典表")
+public class SysDictDTO {
 
     private static final long serialVersionUID = -4136245238746831595L;
 
     @NotNull
-    @ApiModelProperty(value = "字典类型")
-    private SysDictTypeDTO dictType;
+    @Schema(description = "字典类型")
+    private DictType dictType;
 
     @NotBlank
-    @Length(min = 1, max = 30)
+    @Length(min = 1, max = 120)
     @Pattern(regexp = "[\\w.]+$")
-    @ApiModelProperty(value = "字典编码")
-    private String dictCode;
+    @Schema(description = "字典编码")
+    private String value;
 
     @NotBlank
     @Length(min = 1, max = 100)
-    @ApiModelProperty(value = "字典值")
-    private String dictValue;
+    @Schema(description = "字典值")
+    private String label;
 
     @Length(max = 200)
-    @ApiModelProperty(value = "备注")
+    @Schema(description = "备注")
     private String remark;
 
-    @ApiModelProperty(value = "是否有效")
-    private String isValid;
+    @Schema(description = "是否有效")
+    private boolean valid;
 
     public String getKey() {
-        return this.getDictType().getDictTypeCode() + Constants.SEPARATOR + this.getDictCode();
+        return getDictType().getCode() + Constants.SEPARATOR + getValue();
     }
 }

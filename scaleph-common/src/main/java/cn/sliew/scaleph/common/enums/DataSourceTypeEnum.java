@@ -29,10 +29,14 @@ public enum DataSourceTypeEnum {
     JDBC("JDBC", "JDBC"),
     MYSQL("Mysql", "Mysql"),
     ORACLE("Oracle", "Oracle"),
-
     POSTGRESQL("PostGreSQL", "PostGreSQL"),
+    GREENPLUM("Greenplum", "Greenplum"),
+    DORIS("Doris", "Doris"),
+    CLICKHOUSE("ClickHouse", "ClickHouse"),
 
-    KAFKA("Kafka", "Kafka")
+    KAFKA("Kafka", "Kafka"),
+    ELASTICSEARCH("Elasticsearch", "Elasticsearch"),
+    DRUID("Druid", "Druid"),
     ;
 
     private String code;

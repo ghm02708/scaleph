@@ -18,46 +18,49 @@
 
 package cn.sliew.scaleph.security.service.dto;
 
-import javax.validation.constraints.NotBlank;
-import java.util.List;
-
-import cn.sliew.scaleph.common.dto.BaseDTO;
-import cn.sliew.scaleph.system.service.vo.DictVO;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import cn.sliew.scaleph.common.dict.security.RoleStatus;
+import cn.sliew.scaleph.common.dict.security.RoleType;
+import cn.sliew.scaleph.system.model.BaseDTO;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.Length;
+
+import java.util.List;
 
 /**
  * @author gleiyu
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "角色信息", description = "角色信息表")
+@Schema(name = "角色信息", description = "角色信息表")
 public class SecRoleDTO extends BaseDTO {
     private static final long serialVersionUID = 7604916855534200144L;
 
+    @Schema(description = "type")
+    private RoleType type;
+
     @NotBlank
     @Length(min = 1, max = 30)
-    @ApiModelProperty(value = "角色编码")
-    private String roleCode;
+    @Schema(description = "角色编码")
+    private String code;
 
     @NotBlank
     @Length(min = 1, max = 50)
-    @ApiModelProperty(value = "角色名称")
-    private String roleName;
+    @Schema(description = "角色名称")
+    private String name;
 
-    @ApiModelProperty(value = "角色类型")
-    private DictVO roleType;
+    @Schema(description = "order")
+    private Integer order;
 
-    @ApiModelProperty(value = "角色状态")
-    private DictVO roleStatus;
+    @Schema(description = "角色状态")
+    private RoleStatus status;
 
     @Length(max = 100)
-    @ApiModelProperty(value = "角色备注")
-    private String roleDesc;
+    @Schema(description = "角色备注")
+    private String remark;
 
-    @ApiModelProperty(value = "权限信息")
+    @Schema(description = "权限信息")
     private List<SecPrivilegeDTO> privileges;
 }

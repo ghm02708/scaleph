@@ -18,24 +18,32 @@
 
 package cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink;
 
+import cn.sliew.milky.common.util.JacksonUtil;
 import cn.sliew.scaleph.common.enums.JobStepTypeEnum;
+import cn.sliew.scaleph.common.util.PropertyUtil;
 import cn.sliew.scaleph.plugin.framework.core.PluginInfo;
 import cn.sliew.scaleph.plugin.framework.property.PropertyDescriptor;
-import cn.sliew.scaleph.plugin.seatunnel.flink.SeatunnelNativeFlinkPlugin;
+import cn.sliew.scaleph.plugin.seatunnel.flink.SeaTunnelNativeFlinkPlugin;
 import cn.sliew.scaleph.plugin.seatunnel.flink.common.CommonProperties;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.auto.service.AutoService;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static cn.sliew.scaleph.common.enums.SeatunnelNativeFlinkPluginEnum.CLICKHOUSE_SINK;
 import static cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink.ClickHouseProperties.*;
 import static cn.sliew.scaleph.plugin.seatunnel.flink.connector.clickhouse.sink.ClickHouseSinkProperties.*;
 
-public class ClickHouseSinkPlugin extends SeatunnelNativeFlinkPlugin {
+@AutoService(SeaTunnelNativeFlinkPlugin.class)
+public class ClickHouseSinkPlugin extends SeaTunnelNativeFlinkPlugin {
 
     public ClickHouseSinkPlugin() {
-        this.pluginInfo = new PluginInfo(CLICKHOUSE_SINK.getValue(), "clickhouse sink connector", "2.1.1", ClickHouseSinkPlugin.class.getName());
+        this.pluginInfo = new PluginInfo(CLICKHOUSE_SINK.getValue(), "clickhouse sink connector",
+                ClickHouseSinkPlugin.class.getName());
 
         final List<PropertyDescriptor> props = new ArrayList<>();
         props.add(HOST);
@@ -60,4 +68,28 @@ public class ClickHouseSinkPlugin extends SeatunnelNativeFlinkPlugin {
         return JobStepTypeEnum.SINK;
     }
 
+    @Override
+    public ObjectNode createConf() {
+        ObjectNode objectNode = JacksonUtil.createObjectNode();
+        for (PropertyDescriptor descriptor : getSupportedProperties()) {
+            if (properties.contains(descriptor)) {
+                if (CLICKHOUSE_CONF.getName().equals(descriptor.getName())) {
+                    Map<String, String> map = PropertyUtil.formatPropFromStr(properties.getValue(descriptor));
+                    for (Map.Entry<String, String> entry : map.entrySet()) {
+                        objectNode
+                                .put("clickhouse." + entry.getKey(), entry.getValue());
+                    }
+                } else if (FIELDS.getName().equals(descriptor.getName())) {
+                    String[] splitFields = properties.getValue(descriptor).split(",");
+                    ArrayNode jsonNodes = objectNode.putArray(descriptor.getName());
+                    for (String field : splitFields) {
+                        jsonNodes.add(field);
+                    }
+                } else {
+                    objectNode.put(descriptor.getName(), properties.getValue(descriptor));
+                }
+            }
+        }
+        return objectNode;
+    }
 }

@@ -42,15 +42,17 @@ public class PropertyContext implements java.io.Serializable {
 
     public static PropertyContext fromMap(Map<String, Object> map) {
         final PropertyContext context = new PropertyContext();
-        map.forEach(context::setString);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            if (entry.getValue() != null) {
+                context.setString(entry.getKey(), entry.getValue());
+            }
+        }
         return context;
     }
 
     public static PropertyContext fromProperties(Properties props) {
         final PropertyContext context = new PropertyContext();
-        for (String property : props.stringPropertyNames()) {
-            context.setString(property, props.getProperty(property));
-        }
+        props.forEach((property, value) -> context.setString((String) property, value));
         return context;
     }
 

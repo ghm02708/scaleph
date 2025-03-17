@@ -18,11 +18,14 @@
 
 package cn.sliew.scaleph.plugin.framework.property;
 
-import cn.sliew.milky.common.primitives.Booleans;
-import cn.sliew.milky.common.primitives.Doubles;
-import cn.sliew.milky.common.primitives.Floats;
-import cn.sliew.milky.common.primitives.Integers;
-import cn.sliew.milky.common.primitives.Longs;
+import cn.sliew.milky.common.primitives.*;
+import cn.sliew.milky.common.util.JacksonUtil;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public enum Parsers {
     ;
@@ -38,4 +41,13 @@ public enum Parsers {
     public static final Parser<Double> DOUBLE_PARSER = value -> Doubles.parseDouble(value);
 
     public static final Parser<String> STRING_PARSER = value -> value;
+
+    public static final Parser<List<String>> STRING_ARRAY_PARSER = value -> Arrays.stream(StringUtils.commaDelimitedListToStringArray(value))
+            .map(String::trim).collect(Collectors.toList());
+
+    public static final Parser<JsonNode> JSON_PARSER = value -> {
+
+        System.out.println("value: " + value);
+        return JacksonUtil.toJsonNode(value);
+    };
 }
